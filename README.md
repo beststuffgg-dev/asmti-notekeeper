@@ -1,114 +1,60 @@
-# TINotes
-Notes management and viewing system built for TI graphing calculators. Users are able to store organized notes in a folder system in their TI calculators for reference later. You can use the graphic user interface to create files and folders and then TINotes will generate a script file for your TI calculators. You can easily send this file to your calculator and start viewing your notes. 
+# Notekeeper
 
-Try TINotes here: https://alienkevin.github.io/TINotes/
+A local-first notebook for reading and editing **pages made of text and images**.
+Organise pages in notebooks and folders, load files into them, read them in a clean
+reader view, and switch to edit mode to change anything. Everything stays in your
+browser (IndexedDB); nothing is uploaded.
 
-**Demo 1**: Basic Usage 
-![Demo 1](https://raw.githubusercontent.com/AlienKevin/TINotes/master/Demos/Demo1.gif)
+Adapted from [AlienKevin/TINotes](https://github.com/AlienKevin/TINotes) (MIT, © 2019 Kevin Li).
+The notebook / folder / page structure and sidebar come from TINotes; the TI-calculator
+specifics (fixed-width wrapping, uppercase-only text, TI-BASIC script generation) were removed,
+and storage moved from localStorage to IndexedDB so pages can hold images.
 
-**Demo 2**: TINotes have comprehensive step-by-step instructions 
-![Demo 2](https://raw.githubusercontent.com/AlienKevin/TINotes/master/Demos/Demo2.gif)
+## Run it
 
-**Demo 3**: All folders and files are stored locally. Refreshing/closing and reopening will not discard data.
-![Demo 3](https://raw.githubusercontent.com/AlienKevin/TINotes/master/Demos/Demo3.gif)
+No build step and no dependencies. Open `index.html` in a modern browser (double-click works),
+or serve the folder with any static server, e.g. `python3 -m http.server`.
 
-**Demo 4**: Notes navigation in the calculator, showing how you can navigate back and forth both in the folder system and within individual files<br/>
-![Demo 4](https://raw.githubusercontent.com/AlienKevin/TINotes/master/Demos/Demo4.gif)
+## Loading pages
 
-**Demo 5**: You even now add equations to you TI calculators! You can enter any custom equations and TINotes will auto-detect all variables and solve for each. Currently, TINotes cannot solve for variables under sqrt, log, ln, and trig functions but you can solve them using other tools and paste the results back to TINotes. (checkout [quickmath](https://quickmath.com/webMathematica3/quickmath/equations/solve/intermediate.jsp) or [doyourmath](https://doyourmath.com/))<br/>
-TINotes website:<br/>
-![Demo 5 website](https://raw.githubusercontent.com/AlienKevin/TINotes/master/Demos/EquationF%3Dma.gif)
+Use **Import**, or drag files onto the window.
 
-TI calculator screen:<br/>
-![Demo 5 calculator](https://raw.githubusercontent.com/AlienKevin/TINotes/master/Demos/EquationF%3DmaTI.gif)
+| You load | You get |
+| --- | --- |
+| `.txt` / `.md` file | one page named after the file |
+| `.md` with two or more `# Headings` | one page per heading |
+| one or more images | a single page, images in filename order (`page2` before `page10`) |
+| a Notekeeper `.json` backup | a restored copy as a new notebook |
 
-## Set up
-I. Use online: go to https://alienkevin.github.io/TINotes/
-II. Download and use offline
-1. Download or clone this repository
-2. Lauch the `index.html` file by double click in your favorite browser
-3. Now you should be inside the TINotes user interface
+New pages land in the folder you last selected. While editing a page, dropped or pasted
+images and text files are added to *that page* instead.
 
-## Tested/Recommended Browsers
-In order of preference:
-1. Google Chrome
-2. Opera
-3. Mozilla Firefox
+## Reading and editing
 
-## Usage
-### Create, edit, view, and save notes
-1. Select the type of calculator you are using
-      - Select `Monochrome` display type if you are using: TI-83, TI-83 Plus, TI-83 Plus Silver Edition, TI-84 Plus, or TI-84 Plus Silver Edition
-      - Select `Color` display type if you are using: TI-84 Plus C Silver Edition, TI-84 Plus CE
-2. Click on `New Folder` to create a new folder. Click on `New File` to create a new file. Due to the limited screen size, the number of characters allowed for file and folder names are restricted depending on your display type.
-3. If you cliked on `New File`, a text editor will pop up for you to enter notes. **All normal text should be in uppercase** because:
-     * Some lowercase words are predefined as keywords, like "and", "sin(", etc. in TI. Thus, their length cannot be accurately determined because keywords all occupy one space in TI. **This can mess up note layout and hide some parts of the note.**
-     * Uppercase letters (1 byte each) take up **less space** than lowercase letters (2 bytes each).
-4. Right click on the files or folders to `rename` or `delete` them.
-5. In the end, you don't need to save anything before exiting the program, all files and folders are stored locally on your machine and will automatically load next time you lauched the program.
+- **Read**: rendered Markdown (headings, bold/italic, lists, task lists, quotes, code, links),
+  figures with captions, click an image to zoom. Print-friendly.
+- **Edit** (button or <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>E</kbd>): edit the title and text blocks,
+  add captions, reorder / insert / delete blocks, replace images, paste screenshots.
+  Changes autosave (watch the "Saved" indicator).
+- Sidebar: notebooks, folders, search across titles, text and captions, right-click or
+  <kbd>⋯</kbd> for rename / move / delete.
+- Notebook <kbd>⋯</kbd> menu: new, rename, delete, **export backup** (`.json`, images included).
 
-### Export notes
-1. When you are happy with your notes, you can export them to your calculator. Simply click the `Generate TI Script` button to generate the script. In the popup window, click the `download` button to download the script. **I strongly recommend you choose the sourceCoder format and compile the script in SourceCoder and then download and load it to your calculator. New Releases may not support TI-BASIC format**
-2. To load the script into your calculator, you need to download the TI Connect software from [Texas Instrument website](https://education.ti.com/en/software/details/en/CA9C74CAD02440A69FDC7189D7E1B6C2/swticonnectcesoftware#!). Pick the right version for your calculator and operating system and download TI Connect.
-3. Open up the generated script file, select all text and copy it.
-4. Open the TI Connect software and create a new program file. Paste the content in the new file. Name the TI file `TINOTES`.*
-5. Load the TI file to your calculator
+Markdown is rendered by a small built-in renderer that escapes all HTML, so imported
+text can't inject markup.
 
-\* TINotes has been only been tested on TI Connect CE, so it should at least work for TI-84 Plus CE, TI-84 Plus C Silver Edition, TI-84 Plus Silver Edition, TI-84 Plus. For other older calculators, you may need to first compile the script and then load it using TI Connect to your calculator. For compilation, you may need to install softwares like [TokenIDE](https://www.ticalc.org/archives/files/fileinfo/433/43315.html) or online alternative [SourceCoder](https://www.cemetech.net/sc/)
+## Layout
 
-### Keyboard Shortcuts
-1. <kbd>Shift</kbd>+<kbd>f</kbd> to create a new folder
-2. <kbd>Shift</kbd>+<kbd>t</kbd> to create a new file
-3. <kbd>Ctrl</kbd>+<kbd>s</kbd> or <kbd>⌘</kbd>+<kbd>s</kbd> to save a file when the file editor is open
-4. <kbd>Backspace</kbd> to go back to parent folder
+```
+index.html        page shell
+css/app.css       styles (light/dark, mobile slide-over sidebar)
+js/db.js          IndexedDB wrapper
+js/markdown.js    safe Markdown -> HTML
+js/importer.js    files -> pages, backup export/import
+js/app.js         UI and state
+```
 
-### Navigate in the calculator
-1. When the home menu appears with some folders and/or files, press <kbd>enter</kbd> to go into that folder/file
-2. If you are inside a file, 
-    - press <kbd>&#11208;</kbd> or <kbd>&#11205;</kbd> or <kbd>enter</kbd> to go to next page
-    - press <kbd>&#11207;</kbd> or <kbd>&#11206;</kbd> to go to previous page.
-    - press <kbd>2nd</kbd> to exit the file and go back to parent folder
-3. If you are inside a folder,
-    - select the "Back" option in the menu by either scrolling through options using arrow keys and press <kbd>enter</kbd> or pressing the menu item's number
-4. If you are inside an equation solver,
-    - select the equation you want to solve from the menu
-    - when the equation appears, press <kbd>enter</kbd> to select the variable you want to solve for
-    - type in the values of variables prompted, press <kbd>enter</kbd> to continue to next variable
-    - press <kbd>enter</kbd> and the result will show up
-    - If you want to go back to parent folder, press <kbd>2nd</kbd>. If you want to do more calculations, press <kbd>enter</kbd>. You can use <kbd>Ans</kbd> to access the solution of equation.
-    - If you are done with calculations, press <kbd>clear</kbd> to exit the program. The result of your last calculation is preserved in `Ans`.
-    ![Demo for navigation in equatoin solver in calculator](https://raw.githubusercontent.com/AlienKevin/TINotes/master/Demos/EquationCalcNavigationDemo.gif)
+## Limits
 
-## Advanced Usages
- 
-### Pin to home (root folder)
-If you want to create a shortcut to access a file/equation, right click and select `Pin To Home`. The pinned version and the original are linked now and changes to either will automatically update the other. To unpin from home, go to home and delete the linked item.
-<br/>Note: linked items are copied so beaware of their impact on calculator RAM storage.
-
-### Insert special symbols
-You can insert special symbols by typing a "\\" (backward slash) and then the name of the symbol. E.g. "\alpha" produces "α"
-Here's a list of symbols supported:
- * alpha: α
- * beta: β
- * gamma: γ
- * Delta: Δ
- * delta: δ
- * epsilon: ε
- * pi: π
- * lambda: λ
- * mu: μ
- * Omega: Ω
- * phat: p&#770; (p hat)
- * Phi: Φ
- * rho: ρ
- * Sigma: Σ
- * sigma: σ
- * tau: τ
- * sqrt(: √(
- * integral: ∫
- * \<=: ≤
- * \>=: ≥
- * !=: ≠
-
-## License
-This project is licensed under the terms of the MIT license.
+Not supported: PDF, Word/HTML import, and Markdown image links to local files (only `https://` images
+render). Data lives in one browser profile; use **Export backup** to move or keep a copy.

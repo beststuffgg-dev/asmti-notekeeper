@@ -1,3 +1,0 @@
-1. Escape special symbols like "pi" inside strings, 
-use single slash "\" inside the symbol like "p\i"
-Solved 2. Escape " (double quote) in strings
