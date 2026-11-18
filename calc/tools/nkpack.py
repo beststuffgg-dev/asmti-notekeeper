@@ -19,8 +19,10 @@ MAX_TEXT = 4000
 
 def ascii_clean(s):
     """Fold text to what the calculator font can show: ASCII 32..126 and newline."""
-    rep = {'‘': "'", '’': "'", '“': '"', '”': '"', '–': '-', '—': '-',
-           '…': '...', ' ': ' ', '\t': '    ', '•': '*'}
+    rep = {'\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"', '\u2013': '-', '\u2014': '-',
+           '\u2026': '...', '\u00a0': ' ', '\t': '    ', '\u2022': '*', '\u22ef': '...', '\u203a': '>',
+           '\u2039': '<', '\u2192': '->', '\u2190': '<-', '\u00d7': 'x', '\u00f7': '/', '\u2212': '-',
+           '\u2032': "'", '\u00b7': '.'}
     out = []
     for ch in s.replace('\r\n', '\n').replace('\r', '\n'):
         ch = rep.get(ch, ch)
@@ -153,7 +155,7 @@ def main(argv):
         pal, data = quantize([Image.open(f) for f in sorted(imgs)])
         blocks = []
         for k, (w, h, px) in enumerate(data):
-            iname = 'NKI%04d%d' % (len(pages) + 1, k)
+            iname = 'NKI%04d%s' % (len(pages) + 1, '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'[k])
             vars_[iname] = px
             blocks.append(('image', iname, w, h))
         first = os.path.splitext(os.path.basename(sorted(imgs)[0]))[0]

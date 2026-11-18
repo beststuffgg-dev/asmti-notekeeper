@@ -53,7 +53,7 @@
     }
 
     // Promise-based modal. Resolves with the entered/selected value (or true), or null if cancelled.
-    function ask({ title, message, value = '', placeholder, options, ok = 'OK', danger = false, input = false }) {
+    function ask({ title, message, value = '', placeholder, options, ok = 'OK', danger = false, input = false, info = false }) {
         return new Promise((resolve) => {
             let field = null;
             if (options) {
@@ -68,7 +68,7 @@
                     message && h('p', { text: message }),
                     field,
                     h('div', { class: 'dlg-actions' },
-                        h('button', { type: 'button', class: 'btn', text: 'Cancel', onclick: () => dlg.close('cancel') }),
+                        !info && h('button', { type: 'button', class: 'btn', text: 'Cancel', onclick: () => dlg.close('cancel') }),
                         h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), value: 'ok', text: ok }))));
             dlg.addEventListener('close', () => {
                 const accepted = dlg.returnValue === 'ok';
@@ -241,6 +241,67 @@
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+
+    // Scale a stored image to fit the calculator (<= 320x200) and return its RGBA pixels.
+    async function fitForCalculator(imageId) {
+        const rec = await DB.get('images', imageId);
+        if (!rec) return null;
+        const bmp = await createImageBitmap(rec.blob);
+        const k = Math.min(1, TIExport.MAX_W / bmp.width, TIExport.MAX_H / bmp.height);
+        const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d', { willReadFrequently: true });
+        ctx.fillStyle = '#fff';                       // transparent areas become white
+        ctx.fillRect(0, 0, w, h);
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(bmp, 0, 0, w, h);
+        if (bmp.close) bmp.close();
+        return { w, h, data: ctx.getImageData(0, 0, w, h).data };
+    }
+
+    // All pages of the open notebook in sidebar order (folders first), as plain text/image blocks.
+    function orderedPages() {
+        const out = [];
+        const walk = (pid) => {
+            [...S.nodes.values()].filter((n) => (n.parentId || '') === (pid || '')).sort(cmpNodes).forEach((n) => {
+                if (n.type === 'folder') walk(n.id); else out.push(n);
+            });
+        };
+        walk('');
+        return out;
+    }
+
+    async function exportForCalculator() {
+        await flush();
+        const pages = orderedPages();
+        if (!pages.length) { toast('This notebook has no pages to export.', true); return; }
+        toast('Preparing calculator files\u2026');
+        try {
+            const prepared = [];
+            for (const p of pages) {
+                const blocks = [];
+                for (const b of p.blocks) {
+                    if (b.type === 'text') { blocks.push({ type: 'text', text: b.text }); continue; }
+                    const image = await fitForCalculator(b.imageId);
+                    if (image) blocks.push({ type: 'image', image, caption: b.caption });
+                }
+                prepared.push({ title: p.title, blocks });
+            }
+            const res = TIExport.exportPages(prepared);
+            const zip = TIExport.makeZip(res.files.map((f) => ({ name: f.name, data: f.data })));
+            const a = h('a', { href: URL.createObjectURL(new Blob([zip], { type: 'application/zip' })), download: nb().name.replace(/[^\w\- ]+/g, '_') + '-ti84ce.zip' });
+            document.body.append(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+            const note = 'Send every .8xv file in the zip (NKIDX plus the NKP*/NKI* pages) to the calculator with TI Connect CE, together with NOTES.8xp from the calc/ folder, then run NOTES from the PRGM menu.';
+            await ask({ title: res.pageCount + ' page' + (res.pageCount === 1 ? '' : 's') + ' exported', message: (res.warnings.length ? res.warnings.join('\n') + '\n\n' : '') + note, ok: 'OK', info: true });
+        } catch (err) {
+            console.error(err);
+            toast('Export failed: ' + err.message, true);
+        }
     }
 
     /* ---------- sidebar: tree ---------- */
@@ -698,6 +759,7 @@
                 { label: 'New notebook…', run: newNotebook },
                 { label: 'Rename notebook…', run: renameNotebook },
                 { label: 'Export backup (.json)', run: exportNotebook },
+                { label: 'Export for TI-84 CE (.zip)\u2026', run: exportForCalculator },
                 { label: 'Delete notebook…', danger: true, run: deleteNotebook },
             ]);
         });

@@ -1,5 +1,20 @@
 # Notekeeper
 
+Pages of **text and images** you can read and edit - as a browser app, and as a **native program for the
+TI-84 Plus CE** (`calc/`).
+
+| | What it is | Where |
+| --- | --- | --- |
+| **TI-84 CE program** | eZ80 assembly `NOTES.8xp`: page list, reader, on-calculator text editor, pictures | [`calc/`](calc/README.md) |
+| **Web tool** | load / write pages, then **Export for TI-84 CE** to get the files to send to the calculator | `index.html` |
+
+The calculator program is tested in the CEmu emulator core (22 end-to-end tests, no TI ROM needed) - see
+[`calc/README.md`](calc/README.md) for how to install it, the keys, the file format, and what is and isn't verified.
+
+---
+
+## Web tool
+
 A local-first notebook for reading and editing **pages made of text and images**.
 Organise pages in notebooks and folders, load files into them, read them in a clean
 reader view, and switch to edit mode to change anything. Everything stays in your
@@ -38,7 +53,9 @@ images and text files are added to *that page* instead.
   Changes autosave (watch the "Saved" indicator).
 - Sidebar: notebooks, folders, search across titles, text and captions, right-click or
   <kbd>⋯</kbd> for rename / move / delete.
-- Notebook <kbd>⋯</kbd> menu: new, rename, delete, **export backup** (`.json`, images included).
+- Notebook <kbd>⋯</kbd> menu: new, rename, delete, **export backup** (`.json`, images included) and
+  **Export for TI-84 CE (.zip)** - pages, text and images packed as `.8xv` appvars (images scaled to fit 320x200 and
+  reduced to 240 colours per page; non-ASCII text is transliterated or shown as `?`).
 
 Markdown is rendered by a small built-in renderer that escapes all HTML, so imported
 text can't inject markup.
@@ -51,6 +68,7 @@ css/app.css       styles (light/dark, mobile slide-over sidebar)
 js/db.js          IndexedDB wrapper
 js/markdown.js    safe Markdown -> HTML
 js/importer.js    files -> pages, backup export/import
+js/ti-export.js   notebook -> TI-84 CE .8xv files (+ median-cut quantiser, zip writer)
 js/app.js         UI and state
 ```
 

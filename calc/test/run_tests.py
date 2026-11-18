@@ -544,6 +544,66 @@ def shipped_samples_load(binp):
     for i in range(3): s.shots['p%d' % i].save(os.path.join(OUT, 'sample%d.png' % i))
 
 
+@test
+def web_export_to_calculator_end_to_end(binp):
+    """Real web app (Chromium) -> exported zip -> emulator. Needs node + playwright; skipped otherwise."""
+    import shutil, subprocess, zipfile, tempfile
+    if not shutil.which('node'):
+        print('      (skipped: node not found)'); return
+    work = tempfile.mkdtemp(prefix='nk_web_')
+    sd = os.path.join(ROOT, 'samples', 'src')
+    files = [os.path.join(sd, f) for f in ('Welcome.txt', 'Tips.md', 'Diagram.png')]
+    env = dict(os.environ, NODE_PATH=os.environ.get('NODE_PATH', '') or subprocess.run(['npm', 'root', '-g'], capture_output=True, text=True).stdout.strip())
+    r = subprocess.run(['node', os.path.join(HERE, 'web_export.js'), os.path.dirname(ROOT), work] + files, capture_output=True, text=True, env=env, timeout=120)
+    if r.returncode != 0 and 'Cannot find module' in r.stderr:
+        print('      (skipped: playwright not installed for node)'); return
+    check(r.returncode == 0, 'web export failed: ' + r.stdout + r.stderr)
+    z = zipfile.ZipFile(os.path.join(work, 'export.zip')); check(z.testzip() is None, 'zip is corrupt')
+    s = Session('webexp')
+    vars_ = {}
+    for n in z.namelist():
+        check(n.endswith('.8xv'), n)
+        p = os.path.join(work, n); open(p, 'wb').write(z.read(n))
+        name, content = read_8xv(p); vars_[name] = content; s.appvar(name, content)
+    idx = vars_['NKIDX']
+    entries = [(idx[1 + 32 * i:9 + 32 * i].rstrip(b'\0').decode(), idx[9 + 32 * i:33 + 32 * i].rstrip(b'\0').decode()) for i in range(idx[0])]
+    titles = [t for _, t in entries]
+    check({'Welcome', 'Sending pages', 'Diagram'} <= set(titles), titles)
+    s.idle(1)
+    for i in range(len(entries)):
+        if i: s.key('down')
+        s.key('enter'); s.idle(1); s.snap('p%d' % i); s.key('clear')
+    s.key('clear')
+    finish(s, binp)
+    for i, (name, title) in enumerate(entries):
+        eq(header(s.shots['p%d' % i]), title[:24], 'page %s header' % name)
+    d = s.shots['p%d' % titles.index('Diagram')]
+    yellow = sum(1 for x in range(0, 320, 3) for y in range(20, 200, 3) if d.getpixel((x, y))[0] > 200 and d.getpixel((x, y))[1] > 150 and d.getpixel((x, y))[2] < 120)
+    check(yellow > 15, 'yellow curve of the Diagram image should survive browser quantisation (%d samples)' % yellow)
+    w = s.shots['p%d' % titles.index('Sending pages')]
+    check(find_text(w, 'Use the Notekeeper web tool'), 'markdown body rendered on the calculator')
+    s.shots['p%d' % titles.index('Diagram')].save(os.path.join(OUT, 'web_diagram.png'))
+    check('NKIDX' in open(os.path.join(work, 'dialog.txt')).read() or 'TI Connect' in open(os.path.join(work, 'dialog.txt')).read(), 'export dialog explains how to send the files')
+
+
+@test
+def js_exporter_matches_python_packer(binp):
+    import shutil, subprocess, json
+    if not shutil.which('node'):
+        print('      (skipped: node not found)'); return
+    r = subprocess.run(['node', os.path.join(HERE, 'export_parity.js'), os.path.dirname(ROOT)], capture_output=True, text=True, timeout=60)
+    check(r.returncode == 0, r.stderr)
+    j = json.loads(r.stdout)
+    tricky = 'café “quote” — dash … tab\there ⋯ › → × \U0001F600 end\r\nnext'
+    eq(j['clean'], nkpack.ascii_clean(tricky), 'text folding')
+    long = ('word ' * 1000) + 'tail'
+    pal = [0x7fff, 0x0000, 0x03e0, 0x7c00]
+    eq(j['page'], nkpack.build_page('Títle\nx', [('text', tricky), ('image', 'NKI00010', 160, 100), ('text', long)], pal).hex(), 'page bytes')
+    eq(j['index'], nkpack.build_index([('NKP0001', 'One'), ('NKP0002', tricky)]).hex(), 'index bytes')
+    eq(j['v8'], nkpack.appvar_8xv('NKP0001', bytes([1, 2, 3, 4, 250])).hex(), '.8xv bytes')
+    eq(j['v8a'], nkpack.appvar_8xv('NKIDX', bytes([0]), True).hex(), 'archived .8xv bytes')
+
+
 def main():
     flt = sys.argv[1] if len(sys.argv) > 1 else ''
     binp = build()
