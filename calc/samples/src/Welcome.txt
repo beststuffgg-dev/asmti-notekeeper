@@ -1,0 +1,26 @@
+Welcome to Notekeeper for the TI-84 Plus CE.
+
+Pages hold text and pictures. You are reading one now.
+
+READING
+ UP / DOWN scroll the page
+ LEFT / RIGHT jump a screenful
+ CLEAR goes back to the page list
+
+EDITING
+ ENTER (on a page) starts editing. UP/DOWN pick a block of text or a picture.
+  ENTER   edit the text of the block
+  +       add a new text block after it
+  DEL     delete the block (asks first)
+  ( )     move the block up / down
+  CLEAR   save and go back to reading
+
+TYPING IN A TEXT BLOCK
+ ALPHA   cycles 123 -> ABC -> abc  (shown at the bottom right)
+ 123     digits, plus . , ( ) + - * / ^  and (-)=?  STO==  VARS=space
+ ABC abc letters are printed on the keys. 0 = space  . = :  (-) = ?  + = "  3 = '
+ 2nd     then a key types a symbol:
+          . :   , ;   ( [   ) ]   + "   - _   x '   / !   ^ %
+          (-) #   STO &   MATH <   APPS >   PRGM {   1/x }   0 @   VARS ~
+ DEL     backspace       ENTER   new line
+ Arrows move the caret; UP/DOWN follow the wrapped lines.

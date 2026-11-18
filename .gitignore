@@ -1,2 +1,7 @@
 .DS_Store
 node_modules/
+calc/build/
+calc/test/out/
+calc/test/.tools/
+calc/test/harness
+__pycache__/
